@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Playfair_Display, Inter } from 'next/font/google';
+import { useRouter } from 'next/navigation';
 
 const display = Playfair_Display({
   subsets: ['latin'],
@@ -13,18 +14,23 @@ const inter = Inter({
   variable: '--font-sans',
 });
 
+type Category = 'Cocktails' | 'Beer' | 'Wine' | 'Mocktails' | 'Shots';
+
 type Drink = {
   id: string;
   name: string;
   desc: string;
   price: number; // SEK
-  category: 'Cocktails' | 'Beer' | 'Wine' | 'Mocktails' | 'Shots';
+  category: Category;
   tags?: string[];
 };
 
 const DRINKS: Drink[] = [
+  // =========================
+  // COCKTAILS (Drinkar)
+  // =========================
   {
-    id: 'd1',
+    id: 'c1',
     name: 'Pitcher’s Paloma',
     desc: 'Tequila, grapefrukt, lime, sodavatten.',
     price: 149,
@@ -32,7 +38,7 @@ const DRINKS: Drink[] = [
     tags: ['Fräsch', 'Citrus'],
   },
   {
-    id: 'd2',
+    id: 'c2',
     name: 'Espresso Martini',
     desc: 'Vodka, kaffe, kaffelikör.',
     price: 155,
@@ -40,7 +46,7 @@ const DRINKS: Drink[] = [
     tags: ['Kaffe', 'Klassiker'],
   },
   {
-    id: 'd3',
+    id: 'c3',
     name: 'Gin & Tonic',
     desc: 'Gin, tonic, citrus (välj garnish).',
     price: 139,
@@ -48,7 +54,91 @@ const DRINKS: Drink[] = [
     tags: ['Klassiker'],
   },
   {
-    id: 'd4',
+    id: 'c4',
+    name: 'Margarita',
+    desc: 'Tequila, triple sec, lime. (Saltkant vid önskemål)',
+    price: 149,
+    category: 'Cocktails',
+    tags: ['Citrus'],
+  },
+  {
+    id: 'c5',
+    name: 'Whiskey Sour',
+    desc: 'Bourbon, citron, sockerlag. (Äggvita valfritt)',
+    price: 149,
+    category: 'Cocktails',
+    tags: ['Sour'],
+  },
+  {
+    id: 'c6',
+    name: 'Mojito',
+    desc: 'Rom, mynta, lime, socker, sodavatten.',
+    price: 145,
+    category: 'Cocktails',
+    tags: ['Fräsch'],
+  },
+  {
+    id: 'c7',
+    name: 'Aperol Spritz',
+    desc: 'Aperol, prosecco, sodavatten.',
+    price: 139,
+    category: 'Cocktails',
+    tags: ['Bubbligt'],
+  },
+  {
+    id: 'c8',
+    name: 'Negroni',
+    desc: 'Gin, Campari, söt vermouth.',
+    price: 149,
+    category: 'Cocktails',
+    tags: ['Bitter', 'Klassiker'],
+  },
+  {
+    id: 'c9',
+    name: 'Old Fashioned',
+    desc: 'Bourbon/rye, bitters, socker, apelsinzest.',
+    price: 155,
+    category: 'Cocktails',
+    tags: ['Klassiker'],
+  },
+  {
+    id: 'c10',
+    name: 'Pornstar Martini',
+    desc: 'Vaniljvodka, passionsfrukt, lime. (Shot prosecco vid sidan)',
+    price: 159,
+    category: 'Cocktails',
+    tags: ['Söt', 'Populär'],
+  },
+  {
+    id: 'c11',
+    name: 'Dark ’n’ Stormy',
+    desc: 'Mörk rom, ginger beer, lime.',
+    price: 149,
+    category: 'Cocktails',
+    tags: ['Kryddig'],
+  },
+  {
+    id: 'c12',
+    name: 'Tom Collins',
+    desc: 'Gin, citron, socker, sodavatten.',
+    price: 139,
+    category: 'Cocktails',
+    tags: ['Fräsch'],
+  },
+
+  // =========================
+  // ÖL
+  // =========================
+  {
+    id: 'b1',
+    name: 'Lager (40cl)',
+    desc: 'Krispig och lätt.',
+    price: 79,
+    category: 'Beer',
+    tags: ['Lager'],
+  },
+  {
+    id: 'b2',
     name: 'Hazy IPA (40cl)',
     desc: 'Humlig, fruktig, lätt bitter.',
     price: 89,
@@ -56,28 +146,127 @@ const DRINKS: Drink[] = [
     tags: ['IPA'],
   },
   {
-    id: 'd5',
-    name: 'Lager (40cl)',
-    desc: 'Krispig och lätt.',
-    price: 79,
+    id: 'b3',
+    name: 'West Coast IPA (40cl)',
+    desc: 'Torr, tydlig beska, citrus & tall.',
+    price: 92,
     category: 'Beer',
+    tags: ['IPA', 'Bitter'],
   },
   {
-    id: 'd6',
-    name: 'Rött vin (glas)',
-    desc: 'Mjukt och bärigt.',
-    price: 109,
+    id: 'b4',
+    name: 'Pilsner (40cl)',
+    desc: 'Klassisk, frisk med lätt beska.',
+    price: 82,
+    category: 'Beer',
+    tags: ['Pils'],
+  },
+  {
+    id: 'b5',
+    name: 'Wheat Beer (50cl)',
+    desc: 'Mjuk, fruktig och lätt kryddig.',
+    price: 99,
+    category: 'Beer',
+    tags: ['Veteöl'],
+  },
+  {
+    id: 'b6',
+    name: 'Stout (33cl)',
+    desc: 'Mörk, rostad, toner av kaffe & choklad.',
+    price: 95,
+    category: 'Beer',
+    tags: ['Stout'],
+  },
+  {
+    id: 'b7',
+    name: 'Sour Ale (33cl)',
+    desc: 'Syrlig och frisk, fruktiga toner.',
+    price: 98,
+    category: 'Beer',
+    tags: ['Sour'],
+  },
+  {
+    id: 'b8',
+    name: 'Alkoholfri Lager (33cl)',
+    desc: 'Lätt och krispig, 0.0%.',
+    price: 59,
+    category: 'Beer',
+    tags: ['0.0%'],
+  },
+
+  // =========================
+  // VIN
+  // =========================
+  {
+    id: 'w1',
+    name: 'Pinot Noir (glas)',
+    desc: 'Lättare rött – bärigt och mjukt.',
+    price: 119,
     category: 'Wine',
+    tags: ['Rött'],
   },
   {
-    id: 'd7',
-    name: 'Vitt vin (glas)',
-    desc: 'Friskt och aromatiskt.',
-    price: 109,
+    id: 'w2',
+    name: 'Tempranillo (glas)',
+    desc: 'Medelfylligt rött – mörka bär och kryddighet.',
+    price: 119,
     category: 'Wine',
+    tags: ['Rött'],
   },
   {
-    id: 'd8',
+    id: 'w3',
+    name: 'Cabernet Sauvignon (glas)',
+    desc: 'Fylligt rött – tanniner, svarta vinbär.',
+    price: 129,
+    category: 'Wine',
+    tags: ['Rött'],
+  },
+  {
+    id: 'w4',
+    name: 'Sauvignon Blanc (glas)',
+    desc: 'Friskt vitt – citrus, krusbär, mineral.',
+    price: 119,
+    category: 'Wine',
+    tags: ['Vitt'],
+  },
+  {
+    id: 'w5',
+    name: 'Chardonnay (glas)',
+    desc: 'Rundare vitt – äpple, stenfrukt, lätt ek.',
+    price: 125,
+    category: 'Wine',
+    tags: ['Vitt'],
+  },
+  {
+    id: 'w6',
+    name: 'Riesling (glas)',
+    desc: 'Aromatiskt vitt – lime, persika, frisk syra.',
+    price: 119,
+    category: 'Wine',
+    tags: ['Vitt'],
+  },
+  {
+    id: 'w7',
+    name: 'Rosé (glas)',
+    desc: 'Torr rosé – friskt, bärigt.',
+    price: 115,
+    category: 'Wine',
+    tags: ['Rosé'],
+  },
+  {
+    id: 'w8',
+    name: 'Prosecco (glas)',
+    desc: 'Bubbligt – friskt och lätt.',
+    price: 129,
+    category: 'Wine',
+    tags: ['Bubbel'],
+  },
+
+  // =========================
+  // ALKOHOLFRITT (Mocktails)
+  // =========================
+  {
+    id: 'm1',
     name: 'Nojito',
     desc: 'Mynta, lime, socker, sodavatten.',
     price: 95,
@@ -85,24 +274,90 @@ const DRINKS: Drink[] = [
     tags: ['Alkoholfri'],
   },
   {
-    id: 'd9',
+    id: 'm2',
+    name: 'Virgin Paloma',
+    desc: 'Grapefrukt, lime, sodavatten, salt rim valfritt.',
+    price: 95,
+    category: 'Mocktails',
+    tags: ['Citrus', 'Alkoholfri'],
+  },
+  {
+    id: 'm3',
+    name: 'Berry Fizz',
+    desc: 'Bärmix, citron, sodavatten.',
+    price: 95,
+    category: 'Mocktails',
+    tags: ['Bär', 'Alkoholfri'],
+  },
+  {
+    id: 'm4',
+    name: 'Ginger Mule (0%)',
+    desc: 'Ginger beer, lime, mynta.',
+    price: 95,
+    category: 'Mocktails',
+    tags: ['Kryddig', 'Alkoholfri'],
+  },
+
+  // =========================
+  // SHOTS
+  // =========================
+  {
+    id: 's1',
     name: 'Sour Shot',
     desc: 'Syrlig shot (fråga personal om dagens).',
     price: 69,
     category: 'Shots',
   },
+  {
+    id: 's2',
+    name: 'Tequila (shot)',
+    desc: 'Klassisk tequila. (Salt & lime vid önskemål)',
+    price: 79,
+    category: 'Shots',
+    tags: ['Klassiker'],
+  },
+  {
+    id: 's3',
+    name: 'Fireball (shot)',
+    desc: 'Kanelig och söt – serveras kall.',
+    price: 75,
+    category: 'Shots',
+    tags: ['Söt'],
+  },
+  {
+    id: 's4',
+    name: 'Fernet (shot)',
+    desc: 'Kryddig, bitter – för den modige.',
+    price: 79,
+    category: 'Shots',
+    tags: ['Bitter'],
+  },
 ];
 
 type CartItem = { drink: Drink; qty: number };
 
-const CATEGORIES: Drink['category'][] = ['Cocktails', 'Beer', 'Wine', 'Mocktails', 'Shots'];
+// Interna kategorier (behåll för checkout-logik)
+const CATEGORIES: Category[] = ['Cocktails', 'Beer', 'Wine', 'Mocktails', 'Shots'];
+
+// UI-etiketter på svenska (visas i flikarna)
+const CATEGORY_LABELS: Record<Category, string> = {
+  Cocktails: 'Drinkar',
+  Beer: 'Öl',
+  Wine: 'Vin',
+  Mocktails: 'Alkoholfritt',
+  Shots: 'Shots',
+};
 
 function formatSek(v: number) {
   return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' }).format(v);
 }
 
+const CART_KEY = 'qr_cart';
+
 export default function KundDrinkMenyPage() {
-  const [active, setActive] = useState<Drink['category']>('Cocktails');
+  const router = useRouter();
+
+  const [active, setActive] = useState<Category>('Cocktails');
   const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [note, setNote] = useState('');
 
@@ -138,14 +393,41 @@ export default function KundDrinkMenyPage() {
     });
   }
 
-  async function submitOrder() {
+  // Spara kundvagn kontinuerligt (så du inte tappar den om sidan laddas om)
+  useEffect(() => {
+    try {
+      const lines = Object.values(cart).map(({ drink, qty }) => ({
+        id: drink.id,
+        name: drink.name,
+        price: drink.price,
+        category: drink.category,
+        qty,
+      }));
+      const payload = { lines, orderNote: note };
+      localStorage.setItem(CART_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore
+    }
+  }, [cart, note]);
+
+  function goToCheckout() {
     if (totals.count === 0) return;
 
-    alert(
-      `Beställning skickad!\nAntal: ${totals.count}\nSumma: ${formatSek(totals.sum)}\nNotis: ${note || '-'}`
-    );
-    setCart({});
-    setNote('');
+    // En extra “spara nu” innan vi byter sida (failsafe)
+    try {
+      const lines = Object.values(cart).map(({ drink, qty }) => ({
+        id: drink.id,
+        name: drink.name,
+        price: drink.price,
+        category: drink.category,
+        qty,
+      }));
+      localStorage.setItem(CART_KEY, JSON.stringify({ lines, orderNote: note }));
+    } catch {
+      // ignore
+    }
+
+    router.push('/checkout');
   }
 
   return (
@@ -163,28 +445,18 @@ export default function KundDrinkMenyPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35" />
       </div>
 
-      {/* Mobilopt: extra bottom padding + safe-area så inget hamnar bakom sticky bar */}
-      <div
-        className={[
-          'mx-auto w-full max-w-md px-4 pt-6',
-          // mer plats för sticky bar på mobil + safe area för iPhone
-          'pb-[calc(8.5rem+env(safe-area-inset-bottom))]',
-        ].join(' ')}
-      >
+      <div className={['mx-auto w-full max-w-md px-4 pt-6', 'pb-[calc(8.5rem+env(safe-area-inset-bottom))]'].join(' ')}>
         <div className="relative rounded-3xl border border-amber-200/25 bg-black/10 p-4 shadow-[0_30px_80px_rgba(0,0,0,.35)] backdrop-blur-[2px]">
           <div className="pointer-events-none absolute inset-3 rounded-[22px] border border-amber-200/15" />
 
           <header className="px-2 pb-4 pt-2 text-center">
-            <p className="text-xs uppercase tracking-[0.28em] text-amber-100/70">Food, Drinks & Friends</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-amber-100/70">Betala smidigt med Swish</p>
             <h1 className="mt-2 font-[var(--font-display)] text-5xl leading-none text-amber-50 drop-shadow">
               DRINKMENY
             </h1>
-            <p className="mt-3 text-sm text-stone-100/75">
-              Beställ och betala här så serverar vi dig vid bordet.
-            </p>
+            <p className="mt-3 text-sm text-stone-100/75">Beställ och betala här så serverar vi dig vid bordet.</p>
           </header>
 
-          {/* Mobilopt: lite större touch-yta, och “snap” känsla när man scrollar kategorier */}
           <nav className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-3 [scrollbar-width:none]">
             {CATEGORIES.map((c) => {
               const isActive = c === active;
@@ -195,14 +467,13 @@ export default function KundDrinkMenyPage() {
                   className={[
                     'shrink-0 rounded-full text-sm transition',
                     'border border-amber-200/20',
-                    // mobilopt: större touch target (min 44px höjd)
                     'h-11 px-4',
                     isActive
                       ? 'bg-amber-100/15 text-amber-50 shadow-[0_10px_20px_rgba(0,0,0,.25)]'
                       : 'bg-black/10 text-stone-100/80 hover:bg-white/5',
                   ].join(' ')}
                 >
-                  {c}
+                  {CATEGORY_LABELS[c]}
                 </button>
               );
             })}
@@ -235,8 +506,6 @@ export default function KundDrinkMenyPage() {
 
                   <div className="flex flex-col items-end gap-2">
                     <div className="text-sm font-medium text-amber-50">{formatSek(d.price)}</div>
-
-                    {/* Mobilopt: större knapp (h-11) */}
                     <button
                       onClick={() => add(d)}
                       className="h-11 rounded-full border border-amber-200/25 bg-amber-100/15 px-4 text-sm text-amber-50 hover:bg-amber-100/20 active:scale-[0.98]"
@@ -251,7 +520,6 @@ export default function KundDrinkMenyPage() {
                     <span className="text-sm text-stone-100/80">I beställning</span>
 
                     <div className="flex items-center gap-2">
-                      {/* Mobilopt: 44x44 touch target */}
                       <button
                         onClick={() => remove(d.id)}
                         className="h-11 w-11 rounded-full border border-amber-200/20 bg-white/5 text-lg leading-none hover:bg-white/10 active:scale-[0.98]"
@@ -275,32 +543,15 @@ export default function KundDrinkMenyPage() {
               </div>
             ))}
           </section>
-
-          <section className="mt-3 px-1 pb-2">
-            <label className="block text-xs uppercase tracking-[0.18em] text-amber-100/70">
-              Kommentar (t.ex. “utan is”)
-            </label>
-
-            {/* Mobilopt: text-base (>=16px) så iOS inte auto-zooma */}
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={3}
-              placeholder="Skriv här…"
-              className="mt-2 w-full resize-none rounded-2xl border border-amber-200/15 bg-black/20 p-3 text-base text-stone-100 placeholder:text-stone-100/40 outline-none focus:border-amber-200/30"
-            />
-          </section>
         </div>
       </div>
 
-      {/* Sticky “kundvagn” – mobilopt: safe-area, bättre padding, större knapp */}
+      {/* Sticky “kundvagn” */}
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-4">
         <div
           className={[
             'rounded-2xl border border-amber-200/20 bg-black/35 shadow-[0_25px_80px_rgba(0,0,0,.55)] backdrop-blur',
-            // mobilopt: extra padding + safe area
             'p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]',
-            // liten lyft från botten på mobiler med home-indicator
             'mb-3',
           ].join(' ')}
         >
@@ -313,7 +564,7 @@ export default function KundDrinkMenyPage() {
             </div>
 
             <button
-              onClick={submitOrder}
+              onClick={goToCheckout}
               disabled={totals.count === 0}
               className={[
                 'h-11 rounded-full px-5 text-sm font-medium transition',
@@ -323,7 +574,7 @@ export default function KundDrinkMenyPage() {
                   : 'bg-amber-100/15 text-amber-50 hover:bg-amber-100/20 active:scale-[0.99]',
               ].join(' ')}
             >
-              Skicka
+              Checkout
             </button>
           </div>
         </div>
