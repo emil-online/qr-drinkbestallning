@@ -139,12 +139,11 @@ export default function KundDrinkMenyPage() {
   }
 
   async function submitOrder() {
-    // TODO: koppla ditt API här.
-    // Exempel payload:
-    // { tableId, items: [{id, qty}], note }
     if (totals.count === 0) return;
 
-    alert(`Beställning skickad!\nAntal: ${totals.count}\nSumma: ${formatSek(totals.sum)}\nNotis: ${note || '-'}`);
+    alert(
+      `Beställning skickad!\nAntal: ${totals.count}\nSumma: ${formatSek(totals.sum)}\nNotis: ${note || '-'}`
+    );
     setCart({});
     setNote('');
   }
@@ -154,7 +153,6 @@ export default function KundDrinkMenyPage() {
       {/* Bakgrund i "Pitcher’s"-känsla */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[#0b3a33]" />
-        {/* “textur” */}
         <div
           className="absolute inset-0 opacity-[0.18] mix-blend-overlay"
           style={{
@@ -162,28 +160,32 @@ export default function KundDrinkMenyPage() {
               'radial-gradient(circle at 20% 10%, rgba(255,255,255,.12), transparent 35%), radial-gradient(circle at 80% 30%, rgba(255,255,255,.10), transparent 40%), radial-gradient(circle at 40% 90%, rgba(0,0,0,.25), transparent 45%)',
           }}
         />
-        {/* vignette */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35" />
       </div>
 
-      <div className="mx-auto w-full max-w-md px-4 pb-28 pt-6">
-        {/* Tunn ram / “guldlinje” */}
+      {/* Mobilopt: extra bottom padding + safe-area så inget hamnar bakom sticky bar */}
+      <div
+        className={[
+          'mx-auto w-full max-w-md px-4 pt-6',
+          // mer plats för sticky bar på mobil + safe area för iPhone
+          'pb-[calc(8.5rem+env(safe-area-inset-bottom))]',
+        ].join(' ')}
+      >
         <div className="relative rounded-3xl border border-amber-200/25 bg-black/10 p-4 shadow-[0_30px_80px_rgba(0,0,0,.35)] backdrop-blur-[2px]">
           <div className="pointer-events-none absolute inset-3 rounded-[22px] border border-amber-200/15" />
 
-          {/* Header */}
           <header className="px-2 pb-4 pt-2 text-center">
             <p className="text-xs uppercase tracking-[0.28em] text-amber-100/70">Food, Drinks & Friends</p>
             <h1 className="mt-2 font-[var(--font-display)] text-5xl leading-none text-amber-50 drop-shadow">
               DRINKMENY
             </h1>
             <p className="mt-3 text-sm text-stone-100/75">
-              Välj kategori, lägg till i beställningen och skicka till baren.
+              Beställ och betala här så serverar vi dig vid bordet.
             </p>
           </header>
 
-          {/* Kategorier */}
-          <nav className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-3">
+          {/* Mobilopt: lite större touch-yta, och “snap” känsla när man scrollar kategorier */}
+          <nav className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-3 [scrollbar-width:none]">
             {CATEGORIES.map((c) => {
               const isActive = c === active;
               return (
@@ -191,8 +193,10 @@ export default function KundDrinkMenyPage() {
                   key={c}
                   onClick={() => setActive(c)}
                   className={[
-                    'shrink-0 rounded-full px-4 py-2 text-sm transition',
+                    'shrink-0 rounded-full text-sm transition',
                     'border border-amber-200/20',
+                    // mobilopt: större touch target (min 44px höjd)
+                    'h-11 px-4',
                     isActive
                       ? 'bg-amber-100/15 text-amber-50 shadow-[0_10px_20px_rgba(0,0,0,.25)]'
                       : 'bg-black/10 text-stone-100/80 hover:bg-white/5',
@@ -204,7 +208,6 @@ export default function KundDrinkMenyPage() {
             })}
           </nav>
 
-          {/* Lista */}
           <section className="space-y-3 px-1 pb-2">
             {filtered.map((d) => (
               <div
@@ -213,9 +216,7 @@ export default function KundDrinkMenyPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="font-[var(--font-display)] text-xl leading-tight text-amber-50">
-                      {d.name}
-                    </h3>
+                    <h3 className="font-[var(--font-display)] text-xl leading-tight text-amber-50">{d.name}</h3>
                     <p className="mt-1 text-sm text-stone-100/75">{d.desc}</p>
 
                     {!!d.tags?.length && (
@@ -234,31 +235,36 @@ export default function KundDrinkMenyPage() {
 
                   <div className="flex flex-col items-end gap-2">
                     <div className="text-sm font-medium text-amber-50">{formatSek(d.price)}</div>
+
+                    {/* Mobilopt: större knapp (h-11) */}
                     <button
                       onClick={() => add(d)}
-                      className="rounded-full border border-amber-200/25 bg-amber-100/15 px-3 py-2 text-sm text-amber-50 hover:bg-amber-100/20 active:scale-[0.98]"
+                      className="h-11 rounded-full border border-amber-200/25 bg-amber-100/15 px-4 text-sm text-amber-50 hover:bg-amber-100/20 active:scale-[0.98]"
                     >
                       Lägg till
                     </button>
                   </div>
                 </div>
 
-                {/* qty control om i kundvagn */}
                 {cart[d.id]?.qty ? (
                   <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-200/10 bg-black/10 px-3 py-2">
                     <span className="text-sm text-stone-100/80">I beställning</span>
+
                     <div className="flex items-center gap-2">
+                      {/* Mobilopt: 44x44 touch target */}
                       <button
                         onClick={() => remove(d.id)}
-                        className="h-9 w-9 rounded-full border border-amber-200/20 bg-white/5 text-lg leading-none hover:bg-white/10"
+                        className="h-11 w-11 rounded-full border border-amber-200/20 bg-white/5 text-lg leading-none hover:bg-white/10 active:scale-[0.98]"
                         aria-label="Minska"
                       >
                         −
                       </button>
-                      <span className="w-8 text-center text-sm">{cart[d.id].qty}</span>
+
+                      <span className="w-10 text-center text-sm">{cart[d.id].qty}</span>
+
                       <button
                         onClick={() => add(d)}
-                        className="h-9 w-9 rounded-full border border-amber-200/20 bg-white/5 text-lg leading-none hover:bg-white/10"
+                        className="h-11 w-11 rounded-full border border-amber-200/20 bg-white/5 text-lg leading-none hover:bg-white/10 active:scale-[0.98]"
                         aria-label="Öka"
                       >
                         +
@@ -270,25 +276,34 @@ export default function KundDrinkMenyPage() {
             ))}
           </section>
 
-          {/* Notis */}
           <section className="mt-3 px-1 pb-2">
             <label className="block text-xs uppercase tracking-[0.18em] text-amber-100/70">
               Kommentar (t.ex. “utan is”)
             </label>
+
+            {/* Mobilopt: text-base (>=16px) så iOS inte auto-zooma */}
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={3}
               placeholder="Skriv här…"
-              className="mt-2 w-full resize-none rounded-2xl border border-amber-200/15 bg-black/20 p-3 text-sm text-stone-100 placeholder:text-stone-100/40 outline-none focus:border-amber-200/30"
+              className="mt-2 w-full resize-none rounded-2xl border border-amber-200/15 bg-black/20 p-3 text-base text-stone-100 placeholder:text-stone-100/40 outline-none focus:border-amber-200/30"
             />
           </section>
         </div>
       </div>
 
-      {/* Sticky “kundvagn” */}
-      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-4 pb-4">
-        <div className="rounded-2xl border border-amber-200/20 bg-black/35 p-3 shadow-[0_25px_80px_rgba(0,0,0,.55)] backdrop-blur">
+      {/* Sticky “kundvagn” – mobilopt: safe-area, bättre padding, större knapp */}
+      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-4">
+        <div
+          className={[
+            'rounded-2xl border border-amber-200/20 bg-black/35 shadow-[0_25px_80px_rgba(0,0,0,.55)] backdrop-blur',
+            // mobilopt: extra padding + safe area
+            'p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]',
+            // liten lyft från botten på mobiler med home-indicator
+            'mb-3',
+          ].join(' ')}
+        >
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="text-xs uppercase tracking-[0.18em] text-amber-100/70">Din beställning</div>
@@ -301,7 +316,7 @@ export default function KundDrinkMenyPage() {
               onClick={submitOrder}
               disabled={totals.count === 0}
               className={[
-                'rounded-full px-5 py-3 text-sm font-medium transition',
+                'h-11 rounded-full px-5 text-sm font-medium transition',
                 'border border-amber-200/25',
                 totals.count === 0
                   ? 'cursor-not-allowed bg-white/5 text-stone-100/40'
@@ -314,7 +329,6 @@ export default function KundDrinkMenyPage() {
         </div>
       </div>
 
-      {/* liten scrollbar-göm */}
       <style jsx global>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
