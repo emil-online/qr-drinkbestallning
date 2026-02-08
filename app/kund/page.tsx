@@ -16,18 +16,25 @@ const inter = Inter({
 
 type Category = 'Cocktails' | 'Beer' | 'Wine' | 'Mocktails' | 'Shots';
 
+type PourSize = '4a' | '6a';
+type PourRule = { sizes: PourSize[]; extraFor6a: number }; // pris-tillägg för 6a
+
 type Drink = {
   id: string;
   name: string;
   desc: string;
-  price: number; // SEK
+  price: number; // baspris (4a om pourRule finns)
   category: Category;
   tags?: string[];
+  pourRule?: PourRule; // om drink kan beställas som 4a/6a
 };
+
+const POURABLE_CATEGORIES: Category[] = ['Cocktails', 'Shots']; // justera om du vill även ha t.ex. "Mocktails" (troligen inte)
 
 const DRINKS: Drink[] = [
   // =========================
   // COCKTAILS (Drinkar)
+  // Baspris = 4a. 6a = +30 (ändra vid behov)
   // =========================
   {
     id: 'c1',
@@ -36,6 +43,7 @@ const DRINKS: Drink[] = [
     price: 149,
     category: 'Cocktails',
     tags: ['Fräsch', 'Citrus'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c2',
@@ -44,6 +52,7 @@ const DRINKS: Drink[] = [
     price: 155,
     category: 'Cocktails',
     tags: ['Kaffe', 'Klassiker'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c3',
@@ -52,6 +61,7 @@ const DRINKS: Drink[] = [
     price: 139,
     category: 'Cocktails',
     tags: ['Klassiker'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c4',
@@ -60,6 +70,7 @@ const DRINKS: Drink[] = [
     price: 149,
     category: 'Cocktails',
     tags: ['Citrus'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c5',
@@ -68,6 +79,7 @@ const DRINKS: Drink[] = [
     price: 149,
     category: 'Cocktails',
     tags: ['Sour'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c6',
@@ -76,6 +88,7 @@ const DRINKS: Drink[] = [
     price: 145,
     category: 'Cocktails',
     tags: ['Fräsch'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c7',
@@ -84,6 +97,8 @@ const DRINKS: Drink[] = [
     price: 139,
     category: 'Cocktails',
     tags: ['Bubbligt'],
+    // ofta fixed recept – men om du vill:
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c8',
@@ -92,6 +107,7 @@ const DRINKS: Drink[] = [
     price: 149,
     category: 'Cocktails',
     tags: ['Bitter', 'Klassiker'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c9',
@@ -100,6 +116,7 @@ const DRINKS: Drink[] = [
     price: 155,
     category: 'Cocktails',
     tags: ['Klassiker'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c10',
@@ -108,6 +125,7 @@ const DRINKS: Drink[] = [
     price: 159,
     category: 'Cocktails',
     tags: ['Söt', 'Populär'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c11',
@@ -116,6 +134,7 @@ const DRINKS: Drink[] = [
     price: 149,
     category: 'Cocktails',
     tags: ['Kryddig'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
   {
     id: 'c12',
@@ -124,6 +143,7 @@ const DRINKS: Drink[] = [
     price: 139,
     category: 'Cocktails',
     tags: ['Fräsch'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 30 },
   },
 
   // =========================
@@ -300,6 +320,7 @@ const DRINKS: Drink[] = [
 
   // =========================
   // SHOTS
+  // Baspris = 4cl. 6cl = +20 (ändra vid behov)
   // =========================
   {
     id: 's1',
@@ -307,6 +328,7 @@ const DRINKS: Drink[] = [
     desc: 'Syrlig shot (fråga personal om dagens).',
     price: 69,
     category: 'Shots',
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 20 },
   },
   {
     id: 's2',
@@ -315,6 +337,7 @@ const DRINKS: Drink[] = [
     price: 79,
     category: 'Shots',
     tags: ['Klassiker'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 20 },
   },
   {
     id: 's3',
@@ -323,6 +346,7 @@ const DRINKS: Drink[] = [
     price: 75,
     category: 'Shots',
     tags: ['Söt'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 20 },
   },
   {
     id: 's4',
@@ -331,15 +355,15 @@ const DRINKS: Drink[] = [
     price: 79,
     category: 'Shots',
     tags: ['Bitter'],
+    pourRule: { sizes: ['4a', '6a'], extraFor6a: 20 },
   },
 ];
 
-type CartItem = { drink: Drink; qty: number };
+type CartLineKey = string; // `${drinkId}__${size}`
+type CartItem = { drink: Drink; qty: number; size?: PourSize };
 
-// Interna kategorier (behåll för checkout-logik)
 const CATEGORIES: Category[] = ['Cocktails', 'Beer', 'Wine', 'Mocktails', 'Shots'];
 
-// UI-etiketter på svenska (visas i flikarna)
 const CATEGORY_LABELS: Record<Category, string> = {
   Cocktails: 'Drinkar',
   Beer: 'Öl',
@@ -348,63 +372,118 @@ const CATEGORY_LABELS: Record<Category, string> = {
   Shots: 'Shots',
 };
 
+const CATEGORY_SUB: Record<Category, string> = {
+  Cocktails: 'Klassiska & signaturdrinkar',
+  Beer: 'Fat & flaska',
+  Wine: 'Rött, vitt & bubbel',
+  Mocktails: '0% men full smak',
+  Shots: 'Snabba favoriter',
+};
+
 function formatSek(v: number) {
   return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' }).format(v);
 }
 
+function priceFor(drink: Drink, size?: PourSize) {
+  if (!drink.pourRule) return drink.price;
+  if (size === '6a') return drink.price + drink.pourRule.extraFor6a;
+  return drink.price; // 4a = baspris
+}
+
+function lineKey(drinkId: string, size?: PourSize): CartLineKey {
+  return `${drinkId}__${size ?? 'std'}`;
+}
+
+function sizeLabel(size: PourSize) {
+  return size === '4a' ? '4 cl (4a)' : '6 cl (6a)';
+}
+
 const CART_KEY = 'qr_cart';
+
+function Ornament({ className = '' }: { className?: string }) {
+  return (
+    <div className={['flex items-center gap-3', className].join(' ')}>
+      <span className="h-px flex-1 bg-emerald-900/20" />
+      <span className="h-2 w-2 rounded-full bg-emerald-900/40" />
+      <span className="h-px flex-1 bg-emerald-900/20" />
+    </div>
+  );
+}
 
 export default function KundDrinkMenyPage() {
   const router = useRouter();
 
   const [active, setActive] = useState<Category>('Cocktails');
-  const [cart, setCart] = useState<Record<string, CartItem>>({});
+  const [cart, setCart] = useState<Record<CartLineKey, CartItem>>({});
   const [note, setNote] = useState('');
+  const [pourPref, setPourPref] = useState<Record<string, PourSize>>({}); // per drinkId
 
   const filtered = useMemo(() => DRINKS.filter((d) => d.category === active), [active]);
 
   const totals = useMemo(() => {
     const items = Object.values(cart);
     const count = items.reduce((s, it) => s + it.qty, 0);
-    const sum = items.reduce((s, it) => s + it.qty * it.drink.price, 0);
+    const sum = items.reduce((s, it) => s + it.qty * priceFor(it.drink, it.size), 0);
     return { count, sum };
   }, [cart]);
 
   function add(drink: Drink) {
+    const chosenSize: PourSize | undefined = drink.pourRule ? (pourPref[drink.id] ?? '4a') : undefined;
+    const key = lineKey(drink.id, chosenSize);
+
     setCart((prev) => {
-      const existing = prev[drink.id];
+      const existing = prev[key];
       return {
         ...prev,
-        [drink.id]: { drink, qty: (existing?.qty ?? 0) + 1 },
+        [key]: { drink, qty: (existing?.qty ?? 0) + 1, size: chosenSize },
       };
     });
   }
 
-  function remove(drinkId: string) {
+  function remove(drink: Drink) {
+    const chosenSize: PourSize | undefined = drink.pourRule ? (pourPref[drink.id] ?? '4a') : undefined;
+    const key = lineKey(drink.id, chosenSize);
+
     setCart((prev) => {
-      const existing = prev[drinkId];
+      const existing = prev[key];
       if (!existing) return prev;
+
       const nextQty = existing.qty - 1;
       if (nextQty <= 0) {
-        const { [drinkId]: _, ...rest } = prev;
+        const { [key]: _, ...rest } = prev;
         return rest;
       }
-      return { ...prev, [drinkId]: { ...existing, qty: nextQty } };
+      return { ...prev, [key]: { ...existing, qty: nextQty } };
     });
   }
 
-  // Spara kundvagn kontinuerligt (så du inte tappar den om sidan laddas om)
+  function totalQtyForDrink(drink: Drink) {
+    // summera över alla storlekar för samma drink (så “I beställning” känns rimligt)
+    const keys = Object.keys(cart);
+    let sum = 0;
+    for (const k of keys) {
+      if (k.startsWith(`${drink.id}__`)) sum += cart[k]?.qty ?? 0;
+    }
+    return sum;
+  }
+
+  function qtyForActiveSelection(drink: Drink) {
+    const chosenSize: PourSize | undefined = drink.pourRule ? (pourPref[drink.id] ?? '4a') : undefined;
+    const key = lineKey(drink.id, chosenSize);
+    return cart[key]?.qty ?? 0;
+  }
+
   useEffect(() => {
     try {
-      const lines = Object.values(cart).map(({ drink, qty }) => ({
+      const lines = Object.values(cart).map(({ drink, qty, size }) => ({
         id: drink.id,
-        name: drink.name,
-        price: drink.price,
+        name: drink.name + (size ? ` (${sizeLabel(size)})` : ''),
+        price: priceFor(drink, size),
         category: drink.category,
         qty,
+        meta: size ? { pour: size } : undefined,
       }));
-      const payload = { lines, orderNote: note };
-      localStorage.setItem(CART_KEY, JSON.stringify(payload));
+      localStorage.setItem(CART_KEY, JSON.stringify({ lines, orderNote: note }));
     } catch {
       // ignore
     }
@@ -413,14 +492,14 @@ export default function KundDrinkMenyPage() {
   function goToCheckout() {
     if (totals.count === 0) return;
 
-    // En extra “spara nu” innan vi byter sida (failsafe)
     try {
-      const lines = Object.values(cart).map(({ drink, qty }) => ({
+      const lines = Object.values(cart).map(({ drink, qty, size }) => ({
         id: drink.id,
-        name: drink.name,
-        price: drink.price,
+        name: drink.name + (size ? ` (${sizeLabel(size)})` : ''),
+        price: priceFor(drink, size),
         category: drink.category,
         qty,
+        meta: size ? { pour: size } : undefined,
       }));
       localStorage.setItem(CART_KEY, JSON.stringify({ lines, orderNote: note }));
     } catch {
@@ -431,134 +510,250 @@ export default function KundDrinkMenyPage() {
   }
 
   return (
-    <div className={`${display.variable} ${inter.variable} min-h-dvh text-stone-100`}>
-      {/* Bakgrund i "Pitcher’s"-känsla */}
+    <div className={`${display.variable} ${inter.variable} min-h-dvh text-stone-900`}>
+      {/* Bakgrund */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[#0b3a33]" />
         <div
-          className="absolute inset-0 opacity-[0.18] mix-blend-overlay"
+          className="absolute inset-0 opacity-[0.22] mix-blend-overlay"
           style={{
             backgroundImage:
-              'radial-gradient(circle at 20% 10%, rgba(255,255,255,.12), transparent 35%), radial-gradient(circle at 80% 30%, rgba(255,255,255,.10), transparent 40%), radial-gradient(circle at 40% 90%, rgba(0,0,0,.25), transparent 45%)',
+              'radial-gradient(circle at 20% 10%, rgba(255,255,255,.16), transparent 38%), radial-gradient(circle at 80% 35%, rgba(255,255,255,.12), transparent 42%), radial-gradient(circle at 50% 95%, rgba(0,0,0,.28), transparent 45%)',
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/40" />
       </div>
 
-      <div className={['mx-auto w-full max-w-md px-4 pt-6', 'pb-[calc(8.5rem+env(safe-area-inset-bottom))]'].join(' ')}>
-        <div className="relative rounded-3xl border border-amber-200/25 bg-black/10 p-4 shadow-[0_30px_80px_rgba(0,0,0,.35)] backdrop-blur-[2px]">
-          <div className="pointer-events-none absolute inset-3 rounded-[22px] border border-amber-200/15" />
+      <div className={['mx-auto w-full max-w-md px-4 pt-5', 'pb-[calc(9.5rem+env(safe-area-inset-bottom))]'].join(' ')}>
+        <div className="relative overflow-hidden rounded-[26px] border border-black/10 bg-[#f6f0e6] shadow-[0_30px_90px_rgba(0,0,0,.45)]">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.22]"
+            style={{
+              backgroundImage:
+                'radial-gradient(rgba(0,0,0,.045) 1px, transparent 1px), radial-gradient(rgba(0,0,0,.028) 1px, transparent 1px)',
+              backgroundPosition: '0 0, 12px 10px',
+              backgroundSize: '22px 22px',
+            }}
+          />
+          <div className="pointer-events-none absolute inset-3 rounded-[20px] border border-emerald-900/15" />
 
-          <header className="px-2 pb-4 pt-2 text-center">
-            <p className="text-xs uppercase tracking-[0.28em] text-amber-100/70">Betala smidigt med Swish</p>
-            <h1 className="mt-2 font-[var(--font-display)] text-5xl leading-none text-amber-50 drop-shadow">
-              DRINKMENY
-            </h1>
-            <p className="mt-3 text-sm text-stone-100/75">Beställ och betala här så serverar vi dig vid bordet.</p>
-          </header>
+          <div className="relative px-5 pb-4 pt-5">
+            <div className="absolute inset-x-0 top-0 h-24 bg-[#c61f3f]" />
+            <div className="absolute inset-x-0 top-[5.25rem] h-[10px] bg-[#f6f0e6]" />
+            <div className="absolute inset-x-0 top-[5.25rem] h-[10px] opacity-60">
+              <div className="h-full bg-gradient-to-b from-black/10 to-transparent" />
+            </div>
 
-          <nav className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-3 [scrollbar-width:none]">
-            {CATEGORIES.map((c) => {
-              const isActive = c === active;
-              return (
-                <button
-                  key={c}
-                  onClick={() => setActive(c)}
-                  className={[
-                    'shrink-0 rounded-full text-sm transition',
-                    'border border-amber-200/20',
-                    'h-11 px-4',
-                    isActive
-                      ? 'bg-amber-100/15 text-amber-50 shadow-[0_10px_20px_rgba(0,0,0,.25)]'
-                      : 'bg-black/10 text-stone-100/80 hover:bg-white/5',
-                  ].join(' ')}
-                >
-                  {CATEGORY_LABELS[c]}
-                </button>
-              );
-            })}
-          </nav>
+            <div className="relative text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-black/15 px-3 py-1 text-[11px] uppercase tracking-[0.28em] text-[#fff3d6]">
+                Betala smidigt med Swish
+              </div>
 
-          <section className="space-y-3 px-1 pb-2">
-            {filtered.map((d) => (
-              <div
-                key={d.id}
-                className="rounded-2xl border border-amber-200/15 bg-black/15 p-4 backdrop-blur-[1px]"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="font-[var(--font-display)] text-xl leading-tight text-amber-50">{d.name}</h3>
-                    <p className="mt-1 text-sm text-stone-100/75">{d.desc}</p>
+              <h1 className="mt-3 font-[var(--font-display)] text-[44px] leading-none text-[#fff1d9] drop-shadow-[0_2px_0_rgba(0,0,0,.35)]">
+                Pitcher’s
+              </h1>
+              <p className="mt-1 text-[13px] tracking-wide text-[#fff1d9]/90">
+                Drinkmeny • Beställ direkt vid bordet
+              </p>
+
+              <div className="mt-4">
+                <Ornament className="mx-auto max-w-[260px]" />
+              </div>
+            </div>
+          </div>
+
+          <div className="px-5 pb-3">
+            <div className="rounded-2xl border border-emerald-900/10 bg-white/45 p-2">
+              <nav className="no-scrollbar flex gap-2 overflow-x-auto [scrollbar-width:none]">
+                {CATEGORIES.map((c) => {
+                  const isActive = c === active;
+                  return (
+                    <button
+                      key={c}
+                      onClick={() => setActive(c)}
+                      className={[
+                        'shrink-0 rounded-full px-4 py-2 text-sm transition',
+                        'border',
+                        isActive
+                          ? 'border-[#c61f3f]/40 bg-[#c61f3f]/12 text-[#6b0e20]'
+                          : 'border-emerald-900/12 bg-white/55 text-emerald-950/80 hover:bg-white/70',
+                      ].join(' ')}
+                    >
+                      <span className="font-semibold">{CATEGORY_LABELS[c]}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </div>
+
+          <div className="px-5 pb-2">
+            <div className="text-center">
+              <div className="font-[var(--font-display)] text-[34px] leading-tight text-[#c61f3f]">
+                {CATEGORY_LABELS[active]}
+              </div>
+              <div className="mt-1 text-[13px] italic text-emerald-950/80">{CATEGORY_SUB[active]}</div>
+              <div className="mt-3">
+                <Ornament />
+              </div>
+            </div>
+          </div>
+
+          <section className="px-5 pb-5">
+            <div className="space-y-3">
+              {filtered.map((d) => {
+                const isPourable =
+                  !!d.pourRule && (POURABLE_CATEGORIES.includes(d.category) || true /* safe */);
+
+                const selectedSize: PourSize | undefined = isPourable ? (pourPref[d.id] ?? '4a') : undefined;
+
+                const displayPrice = formatSek(priceFor(d, selectedSize));
+                const totalForDrink = totalQtyForDrink(d);
+                const qtySelected = qtyForActiveSelection(d);
+
+                return (
+                  <div key={d.id} className="rounded-2xl border border-emerald-900/10 bg-white/30 p-4">
+                    <div className="flex items-baseline gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-[var(--font-display)] text-[19px] text-emerald-950">
+                          {d.name}
+                        </h3>
+                      </div>
+                      <div className="flex-1 border-b border-dotted border-emerald-900/25" />
+                      <div className="shrink-0 font-[var(--font-display)] text-[16px] text-emerald-950">
+                        {displayPrice}
+                      </div>
+                    </div>
+
+                    <p className="mt-2 text-[13px] leading-relaxed text-emerald-950/80">{d.desc}</p>
 
                     {!!d.tags?.length && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {d.tags.map((t) => (
                           <span
                             key={t}
-                            className="rounded-full border border-amber-200/15 bg-white/5 px-2.5 py-1 text-xs text-amber-50/80"
+                            className="rounded-full border border-emerald-900/12 bg-white/60 px-2.5 py-1 text-[11px] text-emerald-950/80"
                           >
                             {t}
                           </span>
                         ))}
                       </div>
                     )}
-                  </div>
 
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-sm font-medium text-amber-50">{formatSek(d.price)}</div>
-                    <button
-                      onClick={() => add(d)}
-                      className="h-11 rounded-full border border-amber-200/25 bg-amber-100/15 px-4 text-sm text-amber-50 hover:bg-amber-100/20 active:scale-[0.98]"
-                    >
-                      Lägg till
-                    </button>
-                  </div>
-                </div>
+                    {/* 4a / 6a toggle (smidig) */}
+                    {isPourable ? (
+                      <div className="mt-4 rounded-2xl border border-emerald-900/10 bg-white/55 p-2">
+                        <div className="flex items-center justify-between gap-3 px-2">
+                          <div className="text-[12px] font-semibold text-emerald-950/80">Storlek</div>
+                          <div className="text-[11px] text-emerald-950/70">
+                            6a: +{formatSek(d.pourRule!.extraFor6a)}
+                          </div>
+                        </div>
 
-                {cart[d.id]?.qty ? (
-                  <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-200/10 bg-black/10 px-3 py-2">
-                    <span className="text-sm text-stone-100/80">I beställning</span>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          {d.pourRule!.sizes.map((s) => {
+                            const activeSize = selectedSize === s;
+                            return (
+                              <button
+                                key={s}
+                                onClick={() => setPourPref((p) => ({ ...p, [d.id]: s }))}
+                                className={[
+                                  'h-11 rounded-xl border px-3 text-sm transition',
+                                  activeSize
+                                    ? 'border-[#c61f3f]/40 bg-[#c61f3f]/12 text-[#6b0e20] shadow-[0_10px_20px_rgba(0,0,0,.08)]'
+                                    : 'border-emerald-900/12 bg-white/65 text-emerald-950/80 hover:bg-white/80',
+                                ].join(' ')}
+                              >
+                                <span className="font-semibold">{s === '4a' ? '4a' : '6a'}</span>
+                                <span className="ml-2 text-[12px] text-emerald-950/70">
+                                  {s === '4a' ? '4 cl' : '6 cl'}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => remove(d.id)}
-                        className="h-11 w-11 rounded-full border border-amber-200/20 bg-white/5 text-lg leading-none hover:bg-white/10 active:scale-[0.98]"
-                        aria-label="Minska"
-                      >
-                        −
-                      </button>
-
-                      <span className="w-10 text-center text-sm">{cart[d.id].qty}</span>
-
+                    {/* Kontroller */}
+                    <div className="mt-4 flex items-center justify-between gap-3">
                       <button
                         onClick={() => add(d)}
-                        className="h-11 w-11 rounded-full border border-amber-200/20 bg-white/5 text-lg leading-none hover:bg-white/10 active:scale-[0.98]"
-                        aria-label="Öka"
+                        className="h-11 flex-1 rounded-full border border-[#c61f3f]/30 bg-[#c61f3f]/12 px-4 text-sm font-semibold text-[#6b0e20] hover:bg-[#c61f3f]/16 active:scale-[0.99]"
                       >
-                        +
+                        Lägg till
                       </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => remove(d)}
+                          disabled={qtySelected === 0}
+                          className={[
+                            'h-11 w-11 rounded-full border text-lg leading-none transition active:scale-[0.99]',
+                            qtySelected === 0
+                              ? 'cursor-not-allowed border-emerald-900/10 bg-white/40 text-emerald-950/35'
+                              : 'border-emerald-900/15 bg-white/70 text-emerald-950 hover:bg-white/85',
+                          ].join(' ')}
+                          aria-label="Minska"
+                        >
+                          −
+                        </button>
+
+                        <div className="w-10 text-center font-[var(--font-display)] text-[16px] text-emerald-950">
+                          {qtySelected}
+                        </div>
+
+                        <button
+                          onClick={() => add(d)}
+                          className="h-11 w-11 rounded-full border border-emerald-900/15 bg-white/70 text-lg leading-none text-emerald-950 hover:bg-white/85 active:scale-[0.99]"
+                          aria-label="Öka"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
+
+                    {/* Status */}
+                    {totalForDrink > 0 ? (
+                      <div className="mt-3 rounded-xl border border-emerald-900/10 bg-white/50 px-3 py-2 text-[12px] text-emerald-950/80">
+                        I beställning: <span className="font-semibold">{totalForDrink} st</span>
+                        {d.pourRule ? (
+                          <span className="ml-2 text-emerald-950/70">
+                            (valt: {selectedSize === '4a' ? '4a' : '6a'})
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
-            ))}
+                );
+              })}
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-emerald-900/10 bg-white/35 p-4">
+              <div className="font-[var(--font-display)] text-[18px] text-emerald-950">Notering</div>
+              <p className="mt-1 text-[12px] text-emerald-950/75">Allergier, extra is, ingen lime osv.</p>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Skriv en notering (valfritt)…"
+                className="mt-3 h-24 w-full resize-none rounded-xl border border-emerald-900/10 bg-white/75 px-3 py-2 text-sm text-emerald-950 placeholder:text-emerald-950/40 focus:outline-none focus:ring-2 focus:ring-[#c61f3f]/20"
+              />
+            </div>
           </section>
         </div>
       </div>
 
-      {/* Sticky “kundvagn” */}
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-4">
         <div
           className={[
-            'rounded-2xl border border-amber-200/20 bg-black/35 shadow-[0_25px_80px_rgba(0,0,0,.55)] backdrop-blur',
+            'mb-3 overflow-hidden rounded-2xl border border-black/10 bg-[#f6f0e6]/95 shadow-[0_25px_85px_rgba(0,0,0,.6)] backdrop-blur',
             'p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]',
-            'mb-3',
           ].join(' ')}
         >
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-xs uppercase tracking-[0.18em] text-amber-100/70">Din beställning</div>
-              <div className="mt-1 text-sm text-stone-100/80">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-emerald-950/70">Din beställning</div>
+              <div className="mt-1 text-sm text-emerald-950/85">
                 {totals.count === 0 ? 'Inga produkter valda' : `${totals.count} st • ${formatSek(totals.sum)}`}
               </div>
             </div>
@@ -567,11 +762,11 @@ export default function KundDrinkMenyPage() {
               onClick={goToCheckout}
               disabled={totals.count === 0}
               className={[
-                'h-11 rounded-full px-5 text-sm font-medium transition',
-                'border border-amber-200/25',
+                'h-11 rounded-full px-5 text-sm font-semibold transition',
+                'border',
                 totals.count === 0
-                  ? 'cursor-not-allowed bg-white/5 text-stone-100/40'
-                  : 'bg-amber-100/15 text-amber-50 hover:bg-amber-100/20 active:scale-[0.99]',
+                  ? 'cursor-not-allowed border-emerald-900/12 bg-white/55 text-emerald-950/40'
+                  : 'border-[#c61f3f]/28 bg-[#c61f3f]/14 text-[#6b0e20] hover:bg-[#c61f3f]/18 active:scale-[0.99]',
               ].join(' ')}
             >
               Checkout
